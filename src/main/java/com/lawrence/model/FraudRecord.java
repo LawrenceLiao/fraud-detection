@@ -6,6 +6,5 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Builder
-public record AnalysisResult(String accountNum, BigDecimal totalSpend, boolean isFraudulent, LocalDateTime timeStamp) {
-
+public record FraudRecord(String accountNum, BigDecimal totalSpend, LocalDateTime timeStamp) {
 }

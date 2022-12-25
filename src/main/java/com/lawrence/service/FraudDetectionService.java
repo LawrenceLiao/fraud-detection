@@ -1,8 +1,9 @@
 package com.lawrence.service;
 
 import com.lawrence.detector.FraudDetector;
-import com.lawrence.model.AnalysisResult;
+import com.lawrence.model.FraudRecord;
 import com.lawrence.model.Transaction;
+import com.lawrence.parser.OutputParser;
 import com.lawrence.parser.TransactionsParser;
 import lombok.RequiredArgsConstructor;
 
@@ -12,25 +13,20 @@ import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 public class FraudDetectionService {
-    private final TransactionsParser parser;
+    private final TransactionsParser transationsParser;
     private final FraudDetector detector;
+    private final OutputParser outputParser;
 
-    private Set<AnalysisResult> analysisResults = new HashSet<>();
 
     public List<String> getFraudulentAccounts(List<String> inputs, BigDecimal threshold) {
-        List<Transaction> transactions = parser.parseList(inputs);
+        List<Transaction> transactions = transationsParser.parseList(inputs);
 
-        Set<AnalysisResult> results = transactions.stream().map(transaction -> analyse(transaction, threshold)).collect(Collectors.toSet());
-        analysisResults.addAll(results);
+        List<FraudRecord> results = transactions.stream().map(transaction -> analyse(transaction, threshold)).filter(Objects::nonNull).collect(Collectors.toList());
 
-        return getFraudList();
+        return outputParser.parse(results);
     }
 
-    private AnalysisResult analyse(Transaction transaction, BigDecimal threshold) {
+    private FraudRecord analyse(Transaction transaction, BigDecimal threshold) {
         return detector.detectByTransaction(transaction, threshold);
-    }
-
-    private List<String> getFraudList() {
-        return analysisResults.stream().filter(result -> result.isFraudulent()).map(AnalysisResult::accountNum).distinct().toList();
     }
 }
